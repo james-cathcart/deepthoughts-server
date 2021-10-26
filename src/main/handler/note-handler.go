@@ -28,7 +28,7 @@ func (handler *NoteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     case `POST`:
         handler.handlePost(w, r)
     case `GET`:
-
+        handler.handleGet(w, r)
     default:
         w.WriteHeader(http.StatusMethodNotAllowed)
         _,_ = fmt.Fprintln(w, "method not allowed or not yet implemented")
@@ -65,7 +65,7 @@ func (handler *NoteHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 
     if len(params) == 1 {
         if params.Get(`userid`) != "" {
-            handler.getAllNotes(w, r)
+            handler.getAllNotesForUserID(w, r)
         }
     } else {
         w.WriteHeader(http.StatusBadRequest)
@@ -75,13 +75,16 @@ func (handler *NoteHandler) handleGet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (handler *NoteHandler) getAllNotes(w http.ResponseWriter, r *http.Request) {
+func (handler *NoteHandler) getAllNotesForUserID(w http.ResponseWriter, r *http.Request) {
+
 
     userID := r.URL.Query().Get("userid")
     if userID == "" {
         log.Println("note handler -> error: no 'userid' parameter was found")
     }
     notes := handler.NoteService.GetNotesForUser(userID)
+
+    log.Printf("note handler -> getting all notes for userID: %s\n", userID)
 
     jsonBytes, err := json.Marshal(notes)
     if err != nil {

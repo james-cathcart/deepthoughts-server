@@ -44,6 +44,8 @@ func (service *NoteService) GetNotesForUser(userID string) []*model.Note {
         panic(err)
     }
 
+    log.Printf("note svc -> returning %d notes\n", len(results))
+
     return results
 }
 

@@ -27,7 +27,7 @@ func main() {
     }
 
     mux := http.NewServeMux()
-    mux.Handle(handler.NoteApiEndpoint, &noteHandler)
+    mux.Handle(handler.NoteApiEndpoint, handler.DisableCors(&noteHandler))
 
     server := http.Server{
         Addr: ":8080",
