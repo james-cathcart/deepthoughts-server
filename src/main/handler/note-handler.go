@@ -5,13 +5,12 @@ import (
     "deepthoughts-server/service/note"
     "encoding/json"
     "fmt"
-    "github.com/google/uuid"
+    "io/ioutil"
     "log"
     "net/http"
 )
 
 const (
-    NewPostTitle string = `New Note`
     ActionType string = `action-type`
     CreateAction string = `create`
 )
@@ -46,15 +45,32 @@ func (handler *NoteHandler) handlePost(w http.ResponseWriter, r *http.Request) {
 
 func (handler *NoteHandler) newNote(w http.ResponseWriter, r *http.Request) {
 
-    log.Println("note handler -> creating new note")
-    newID := uuid.New().String()
-
-    newNote := model.Note{
-        ID: newID,
-        Title: NewPostTitle,
+    bodyBytes, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        _, _ = w.Write([]byte("failed to read body"))
+        return
     }
 
-    handler.NoteService.CreateNote(newNote)
+    var newNote model.Note
+    err = json.Unmarshal(bodyBytes, &newNote)
+    if err != nil {
+        w.WriteHeader(http.StatusInternalServerError)
+        _, _ = w.Write([]byte("failed to unmarshal json"))
+        return
+    }
+
+    log.Printf("note handler -> saving new note: %s\n", newNote.ID)
+
+    dbResult := handler.NoteService.CreateNote(newNote)
+    if dbResult.InsertedID == nil {
+        log.Printf("error -> could not persist new note to database\n")
+        w.WriteHeader(http.StatusInternalServerError)
+        _, _ = w.Write([]byte("could not save new note to database"))
+        return
+    }
+
+    w.WriteHeader(http.StatusCreated)
 }
 
 func (handler *NoteHandler) handleGet(w http.ResponseWriter, r *http.Request) {

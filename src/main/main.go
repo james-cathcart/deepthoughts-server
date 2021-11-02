@@ -4,6 +4,7 @@ import (
     "context"
     "deepthoughts-server/handler"
     "deepthoughts-server/service/note"
+    "fmt"
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/mongo/options"
     "net/http"
@@ -11,12 +12,16 @@ import (
 
 func main() {
 
+    fmt.Println("DeepThoughts Server")
+    fmt.Println("loading...")
+
     clientOptions := options.Client().ApplyURI("mongodb://mongo.apollo.dev:27017")
-    mongoClient, err := mongo.Connect(context.TODO(), clientOptions)
+    ctx := context.TODO()
+    mongoClient, err := mongo.Connect(ctx, clientOptions)
     if err != nil {
         panic(err)
     }
-    defer mongoClient.Disconnect(context.TODO())
+    defer mongoClient.Disconnect(ctx)
 
     noteService := note.NoteService{
         Client: mongoClient,
@@ -34,6 +39,6 @@ func main() {
         Handler: mux,
     }
 
+    fmt.Println("starting server")
     server.ListenAndServe()
-    defer server.Close()
 }
